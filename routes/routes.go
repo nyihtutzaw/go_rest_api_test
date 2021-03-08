@@ -8,6 +8,8 @@ import (
 func NewRouter() *mux.Router {
 	router := mux.NewRouter()
 	apiRoutes := router.PathPrefix("/api").Subrouter()
+
+	userHandler(apiRoutes)
 	authorHandler(apiRoutes)
 	bookHandler(apiRoutes)
 	return router

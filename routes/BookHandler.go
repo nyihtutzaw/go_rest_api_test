@@ -3,6 +3,7 @@ package routes
 import (
 	"encoding/json"
 	"net/http"
+	"rest_api_test/authservice"
 	"rest_api_test/database"
 	"rest_api_test/models"
 	"strconv"
@@ -96,11 +97,12 @@ func deleteBook(w http.ResponseWriter, r *http.Request) {
 }
 
 func bookHandler(r *mux.Router) {
-
-	r.HandleFunc("/books", getBooks).Methods("GET")
+	e := r.PathPrefix("/books").Subrouter()
+	e.Use(authservice.Middleware)
+	e.HandleFunc("", getBooks).Methods("GET")
 
 	s := r.PathPrefix("/book").Subrouter()
-
+	s.Use(authservice.Middleware)
 	s.HandleFunc("/{id}", getBook).Methods("GET")
 	s.HandleFunc("/store", createBook).Methods("POST")
 	s.HandleFunc("/{id}", updateBook).Methods("PUT")

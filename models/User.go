@@ -16,4 +16,5 @@ type UserBody struct {
 type UserResponseType struct {
 	User    User   `json:"user"`
 	Message string `json:"message"`
+	Token   string `json:"token"`
 }

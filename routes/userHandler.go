@@ -3,6 +3,7 @@ package routes
 import (
 	"encoding/json"
 	"net/http"
+	"rest_api_test/authservice"
 	"rest_api_test/database"
 	"rest_api_test/models"
 
@@ -62,6 +63,7 @@ func login(w http.ResponseWriter, r *http.Request) {
 			json.NewEncoder(w).Encode(models.UserResponseType{
 				Message: "Login success",
 				User:    user.UserData,
+				Token:   authservice.CreateToken(user.UserData),
 			})
 		} else {
 			w.WriteHeader(401)

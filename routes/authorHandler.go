@@ -3,6 +3,7 @@ package routes
 import (
 	"encoding/json"
 	"net/http"
+	"rest_api_test/authservice"
 	"rest_api_test/database"
 	"rest_api_test/models"
 
@@ -22,6 +23,7 @@ func getAuthors(w http.ResponseWriter, r *http.Request) {
 }
 
 func getAuthor(w http.ResponseWriter, r *http.Request) {
+
 	params := mux.Vars(r)
 	w.Header().Set("Content-Type", "application/json")
 	author := database.GetAuthorByID(params["id"])
@@ -86,10 +88,12 @@ func deleteAuthor(w http.ResponseWriter, r *http.Request) {
 
 func authorHandler(r *mux.Router) {
 
-	r.HandleFunc("/authors", getAuthors).Methods("GET")
+	e := r.PathPrefix("/authors").Subrouter()
+	e.Use(authservice.Middleware)
+	e.HandleFunc("", getAuthors).Methods("GET")
 
 	s := r.PathPrefix("/author").Subrouter()
-
+	s.Use(authservice.Middleware)
 	s.HandleFunc("/{id}", getAuthor).Methods("GET")
 	s.HandleFunc("/store", createAuthor).Methods("POST")
 	s.HandleFunc("/{id}", updateAuthor).Methods("PUT")

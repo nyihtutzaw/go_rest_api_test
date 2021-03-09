@@ -2,6 +2,7 @@ package database
 
 import (
 	"rest_api_test/models"
+	"strconv"
 )
 
 // RegisterUser from database
@@ -58,5 +59,26 @@ func GetUserByUsername(username string) models.UserBody {
 		UserData: user,
 		Password: password,
 	}
+
+}
+
+// GetUserByIDAnndUsername from database
+func GetUserByIDAnndUsername(userID float64, username string) models.User {
+	var user models.User
+
+	id := strconv.Itoa(int(userID))
+
+	rows, err := getDB().Query("SELECT id,username FROM users where id=" + id + " and username='" + username + "'")
+	if err != nil {
+		panic(err.Error()) // proper error handling instead of panic in your app
+	}
+
+	for rows.Next() {
+		rows.Scan(&user.ID, &user.Username)
+	}
+
+	defer getDB().Close()
+
+	return user
 
 }

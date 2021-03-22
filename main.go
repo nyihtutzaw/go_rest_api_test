@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"net/http"
+	"rest_api_test/config"
 	"rest_api_test/routes"
 )
 
@@ -12,5 +13,5 @@ func main() {
 	r := routes.NewRouter()
 
 	// Start server
-	log.Fatal(http.ListenAndServe(":8000", r))
+	log.Fatal(http.ListenAndServe(":"+config.GETEnvVariable("PORT"), r))
 }

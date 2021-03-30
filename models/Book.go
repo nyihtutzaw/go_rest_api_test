@@ -6,6 +6,7 @@ type Book struct {
 	Name     string `json:"name"`
 	AuthorID int64  `json:"authorID"`
 	Author   Author `json:"author"`
+	Image    string `json:"image"`
 }
 
 // BooksResponseType Model

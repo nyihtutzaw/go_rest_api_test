@@ -3,18 +3,20 @@ package database
 import (
 	"database/sql"
 	"rest_api_test/models"
+	"rest_api_test/utils"
 	"strconv"
 )
 
 type resultData struct {
-	authorName string
+	authorName  string
+	authorImage string
 }
 
 // GetAllBook from database
 func GetAllBook() []models.Book {
 	var books []models.Book
 
-	rows, err := getDB().Query("SELECT books.id as ID ,books.name,books.authorID,authors.name as authorName FROM books,authors where books.authorID=authors.id and books.status=1")
+	rows, err := getDB().Query("SELECT books.id as ID ,books.name,books.authorID,authors.name as authorName,authors.image as authorImage,books.image FROM books,authors where books.authorID=authors.id and books.status=1")
 	if err != nil {
 		panic(err.Error()) // proper error handling instead of panic in your app
 	}
@@ -22,6 +24,7 @@ func GetAllBook() []models.Book {
 	for rows.Next() {
 		var book models.Book
 		book = getBookObj(rows)
+
 		books = append(books, book)
 	}
 
@@ -34,7 +37,7 @@ func GetAllBook() []models.Book {
 func GetAllBookByAuthorID(authorID string) []models.Book {
 	var books []models.Book
 
-	rows, err := getDB().Query("SELECT books.id as ID ,books.name,books.authorID,authors.name as authorName FROM books,authors where books.authorID=authors.id and books.status=1 and books.authorID=" + authorID)
+	rows, err := getDB().Query("SELECT books.id as ID ,books.name,books.authorID,authors.name as authorName,authors.image as authorImage,books.image FROM books,authors where books.authorID=authors.id and books.status=1 and books.authorID=" + authorID)
 	if err != nil {
 		panic(err.Error()) // proper error handling instead of panic in your app
 	}
@@ -42,6 +45,7 @@ func GetAllBookByAuthorID(authorID string) []models.Book {
 	for rows.Next() {
 		var book models.Book
 		book = getBookObj(rows)
+
 		books = append(books, book)
 	}
 
@@ -55,13 +59,14 @@ func GetBookByID(id string) models.Book {
 
 	var book models.Book
 
-	rows, err := getDB().Query("SELECT books.id as ID ,books.name,books.authorID,authors.name as authorName FROM books,authors where books.authorID=authors.id and books.status=1 and books.id=" + id)
+	rows, err := getDB().Query("SELECT books.id as ID,books.name,books.authorID,authors.name as authorName,authors.image as authorImage,books.image FROM books,authors where books.authorID=authors.id and books.status=1 and books.id=" + id)
 	if err != nil {
 		panic(err.Error()) // proper error handling instead of panic in your app
 	}
 
 	for rows.Next() {
 		book = getBookObj(rows)
+
 	}
 
 	defer getDB().Close()
@@ -72,7 +77,7 @@ func GetBookByID(id string) models.Book {
 
 // SaveBook into database
 func SaveBook(book models.Book) models.Book {
-	insert, err := getDB().Exec("INSERT INTO books (name,authorID) VALUES ('" + book.Name + "'," + strconv.Itoa(int(book.AuthorID)) + ")")
+	insert, err := getDB().Exec("INSERT INTO books (name,authorID,image) VALUES ('" + book.Name + "'," + strconv.Itoa(int(book.AuthorID)) + ",'" + book.Image + "')")
 	if err != nil {
 		panic(err.Error())
 	}
@@ -124,12 +129,16 @@ func getBookObj(rows *sql.Rows) models.Book {
 	var customData resultData
 	var book models.Book
 
-	rows.Scan(&book.ID, &book.Name, &book.AuthorID, &customData.authorName)
+	rows.Scan(&book.ID, &book.Name, &book.AuthorID, &customData.authorName, &customData.authorImage, &book.Image)
+
+	customData.authorImage = utils.GetFullName(customData.authorImage, "authors")
 
 	book.Author = models.Author{
-		ID:   book.AuthorID,
-		Name: customData.authorName,
+		ID:    book.AuthorID,
+		Name:  customData.authorName,
+		Image: customData.authorImage,
 	}
-	return book
 
+	book.Image = utils.GetFullName(book.Image, "books")
+	return book
 }

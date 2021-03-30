@@ -2,20 +2,23 @@ package database
 
 import (
 	"rest_api_test/models"
+	"rest_api_test/utils"
 )
 
 // GetAllAuthor from database
 func GetAllAuthor() []models.Author {
-	var authors []models.Author
 
-	rows, err := getDB().Query("SELECT id,name FROM authors where status=1")
+	authors := []models.Author{}
+
+	rows, err := getDB().Query("SELECT id,name,image FROM authors where status=1")
 	if err != nil {
 		panic(err.Error()) // proper error handling instead of panic in your app
 	}
 
 	for rows.Next() {
 		var author models.Author
-		rows.Scan(&author.ID, &author.Name)
+		rows.Scan(&author.ID, &author.Name, &author.Image)
+		author.Image = utils.GetFullName(author.Image, "authors")
 		authors = append(authors, author)
 	}
 
@@ -28,13 +31,14 @@ func GetAllAuthor() []models.Author {
 func GetAuthorByID(id string) models.Author {
 	var author models.Author
 
-	rows, err := getDB().Query("SELECT id,name FROM authors where status=1 and id=" + id)
+	rows, err := getDB().Query("SELECT id,name,image FROM authors where status=1 and id=" + id)
 	if err != nil {
 		panic(err.Error()) // proper error handling instead of panic in your app
 	}
 
 	for rows.Next() {
-		rows.Scan(&author.ID, &author.Name)
+		rows.Scan(&author.ID, &author.Name, &author.Image)
+		author.Image = utils.GetFullName(author.Image, "authors")
 	}
 
 	defer getDB().Close()
@@ -45,7 +49,7 @@ func GetAuthorByID(id string) models.Author {
 
 // SaveAuthor into database
 func SaveAuthor(author models.Author) models.Author {
-	insert, err := getDB().Exec("INSERT INTO authors (name) VALUES ('" + author.Name + "')")
+	insert, err := getDB().Exec("INSERT INTO authors (name,image) VALUES ('" + author.Name + "','" + author.Image + "')")
 	if err != nil {
 		panic(err.Error())
 	}
@@ -55,8 +59,9 @@ func SaveAuthor(author models.Author) models.Author {
 	defer getDB().Close()
 
 	return models.Author{
-		ID:   lastID,
-		Name: author.Name,
+		ID:    lastID,
+		Name:  author.Name,
+		Image: author.Image,
 	}
 }
 

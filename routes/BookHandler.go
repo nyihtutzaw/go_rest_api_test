@@ -2,10 +2,12 @@ package routes
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"rest_api_test/authservice"
 	"rest_api_test/database"
 	"rest_api_test/models"
+	"rest_api_test/utils"
 	"strconv"
 
 	"github.com/gorilla/mux"
@@ -48,10 +50,21 @@ func getBook(w http.ResponseWriter, r *http.Request) {
 func createBook(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var book models.Book
-	_ = json.NewDecoder(r.Body).Decode(&book)
+	r.ParseMultipartForm(10 << 20)
 
-	book = database.SaveBook(book)
+	err, fileName := utils.UploadFile(r, "image", "books")
+
+	if err != nil {
+		fmt.Printf(err.Error())
+	}
+
+	authorID, err := strconv.ParseInt(r.FormValue("authorID"), 10, 64)
+
+	book := database.SaveBook(models.Book{
+		Name:     r.FormValue("name"),
+		AuthorID: authorID,
+		Image:    fileName,
+	})
 
 	book = database.GetBookByID(strconv.Itoa(int(book.ID)))
 
@@ -84,6 +97,10 @@ func updateBook(w http.ResponseWriter, r *http.Request) {
 func deleteBook(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	params := mux.Vars(r)
+
+	book := database.GetBookByID(params["id"])
+
+	utils.RemoveFile("books", book.Image)
 
 	result := database.DeleteBookByID(params["id"])
 	if !result {

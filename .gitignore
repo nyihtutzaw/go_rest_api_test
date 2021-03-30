@@ -1,0 +1,6 @@
+/resources
+.env
+.mod
+.sum
+go.mod
+go.sum

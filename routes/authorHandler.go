@@ -2,18 +2,18 @@ package routes
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"rest_api_test/authservice"
 	"rest_api_test/database"
 	"rest_api_test/models"
+	"rest_api_test/utils"
 
 	"github.com/gorilla/mux"
 )
 
-var authors []models.Author
-
 func getAuthors(w http.ResponseWriter, r *http.Request) {
-
+	var authors []models.Author
 	authors = database.GetAllAuthor()
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(&models.AuthorsResponseType{
@@ -40,10 +40,18 @@ func getAuthor(w http.ResponseWriter, r *http.Request) {
 
 func createAuthor(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	var author models.Author
-	_ = json.NewDecoder(r.Body).Decode(&author)
+	r.ParseMultipartForm(10 << 20)
 
-	author = database.SaveAuthor(author)
+	err, fileName := utils.UploadFile(r, "image", "authors")
+
+	if err != nil {
+		fmt.Printf(err.Error())
+	}
+
+	author := database.SaveAuthor(models.Author{
+		Name:  r.FormValue("name"),
+		Image: fileName,
+	})
 
 	json.NewEncoder(w).Encode(&models.AuthorResponseType{
 		Data:    author,
@@ -74,6 +82,9 @@ func updateAuthor(w http.ResponseWriter, r *http.Request) {
 func deleteAuthor(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	params := mux.Vars(r)
+	author := database.GetAuthorByID(params["id"])
+
+	utils.RemoveFile("authors", author.Image)
 
 	result := database.DeleteAuthorByID(params["id"])
 	if !result {

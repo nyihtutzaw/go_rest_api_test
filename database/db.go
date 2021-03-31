@@ -1,17 +1,35 @@
 package database
 
 import (
-	"database/sql"
+	"fmt"
 	"rest_api_test/config"
+	"rest_api_test/models"
 
-	_ "github.com/go-sql-driver/mysql"
+	"gorm.io/driver/mysql"
+	"gorm.io/gorm"
 )
 
-func getDB() *sql.DB {
-	connection, err := sql.Open(config.GETEnvVariable("DB"), config.GETEnvVariable("DB_USERNAME")+":"+config.GETEnvVariable("DB_PASSWORD")+"@/"+config.GETEnvVariable("DB_NAME"))
+// GetDB
+func GetDB() *gorm.DB {
+
+	dsn := config.GETEnvVariable("DB_USERNAME") + ":" + config.GETEnvVariable("DB_PASSWORD") + "@tcp(127.0.0.1:3306)/" + config.GETEnvVariable("DB_NAME") + "?charset=utf8mb4&parseTime=True"
+
+	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
+
 	if err != nil {
-		panic(err.Error()) // Just for example purpose. You should use proper error handling instead of panic
+		fmt.Printf(err.Error())
 	}
 
-	return connection
+	return db
+
+}
+
+func MigrateTables() {
+
+	err := GetDB().AutoMigrate(&models.User{}, &models.Author{})
+	if err != nil {
+		fmt.Printf(err.Error())
+	} else {
+		fmt.Printf("Migration success")
+	}
 }

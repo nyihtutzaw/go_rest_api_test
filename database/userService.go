@@ -1,64 +1,36 @@
 package database
 
 import (
+	"fmt"
 	"rest_api_test/models"
-	"strconv"
 )
 
 // RegisterUser from database
-func RegisterUser(userData models.UserBody) models.User {
+func RegisterUser(userData models.User) models.User {
 
-	insert, err := getDB().Exec("INSERT INTO users (username,password) VALUES ('" + userData.UserData.Username + "','" + userData.Password + "')")
-	if err != nil {
-		panic(err.Error())
+	result := GetDB().Create(&userData)
+	if result.Error != nil {
+		fmt.Printf(result.Error.Error())
 	}
 
-	lastID, err := insert.LastInsertId()
-
-	defer getDB().Close()
-
-	return models.User{
-		ID:       lastID,
-		Username: userData.UserData.Username,
-	}
+	return userData
 
 }
 
 // CheckUserExist from database
 func CheckUserExist(username string) int {
-	rows, err := getDB().Query("SELECT * FROM users where username='" + username + "'")
-	if err != nil {
-		panic(err.Error()) // proper error handling instead of panic in your app
-	}
 
-	count := 0
-	for rows.Next() {
-		count++
-	}
+	result := GetDB().Where("username = ?", username).Find(&models.User{})
 
-	return count
+	return int(result.RowsAffected)
 }
 
 // GetUserByUsername from database
-func GetUserByUsername(username string) models.UserBody {
+func GetUserByUsername(username string) models.User {
 	var user models.User
-	var password string
 
-	rows, err := getDB().Query("SELECT * FROM users where username='" + username + "'")
-	if err != nil {
-		panic(err.Error()) // proper error handling instead of panic in your app
-	}
-
-	for rows.Next() {
-		rows.Scan(&user.ID, &user.Username, &password)
-	}
-
-	defer getDB().Close()
-
-	return models.UserBody{
-		UserData: user,
-		Password: password,
-	}
+	GetDB().Where("username = ?", username).Find(&user)
+	return user
 
 }
 
@@ -66,19 +38,7 @@ func GetUserByUsername(username string) models.UserBody {
 func GetUserByIDAnndUsername(userID float64, username string) models.User {
 	var user models.User
 
-	id := strconv.Itoa(int(userID))
-
-	rows, err := getDB().Query("SELECT id,username FROM users where id=" + id + " and username='" + username + "'")
-	if err != nil {
-		panic(err.Error()) // proper error handling instead of panic in your app
-	}
-
-	for rows.Next() {
-		rows.Scan(&user.ID, &user.Username)
-	}
-
-	defer getDB().Close()
-
+	GetDB().Where("username = ?", username).Where("id=?", userID).Find(&user)
 	return user
 
 }

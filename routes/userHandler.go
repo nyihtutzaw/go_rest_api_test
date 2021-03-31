@@ -31,18 +31,18 @@ func register(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if database.CheckUserExist(t.Username) > 0 {
-		w.WriteHeader(409)
 		json.NewEncoder(w).Encode(models.ResponseType{
 			Message: "Username already existed",
 		})
 	} else {
-		user := database.RegisterUser(models.UserBody{
-			UserData: models.User{
-				Username: t.Username,
-			},
+		user := database.RegisterUser(models.User{
+			Username: t.Username,
 			Password: string(hashedPassword),
 		})
-		json.NewEncoder(w).Encode(user)
+		json.NewEncoder(w).Encode(models.User{
+			Username: user.Username,
+			ID:       user.ID,
+		})
 	}
 
 }
@@ -57,13 +57,16 @@ func login(w http.ResponseWriter, r *http.Request) {
 	}
 	user := database.GetUserByUsername(t.Username)
 
-	if user.UserData.ID > 0 {
+	if user.ID > 0 {
 		err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(t.Password))
 		if err == nil {
 			json.NewEncoder(w).Encode(models.UserResponseType{
 				Message: "Login success",
-				User:    user.UserData,
-				Token:   authservice.CreateToken(user.UserData),
+				User: models.User{
+					Username: user.Username,
+					ID:       user.ID,
+				},
+				Token: authservice.CreateToken(user),
 			})
 		} else {
 			w.WriteHeader(401)

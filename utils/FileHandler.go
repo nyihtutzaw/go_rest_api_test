@@ -3,7 +3,6 @@ package utils
 import (
 	"fmt"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"os"
 	"strings"
@@ -12,9 +11,9 @@ import (
 var resourceDir = "resources/images/"
 
 func RemoveFile(folder string, name string) {
-	e := os.Remove(resourceDir + folder + "/" + name)
+	e := os.Remove(name)
 	if e != nil {
-		log.Fatal(e)
+		fmt.Printf("File not deleted")
 	}
 }
 

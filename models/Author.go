@@ -2,7 +2,7 @@ package models
 
 // Author models
 type Author struct {
-	ID    int64  `json:"id"`
+	ID    int64  `gorm:"primaryKey" json:"id"`
 	Name  string `json:"name"`
 	Image string `json:"image"`
 }

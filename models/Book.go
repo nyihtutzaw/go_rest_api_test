@@ -5,7 +5,7 @@ type Book struct {
 	ID       int64  `json:"id"`
 	Name     string `json:"name"`
 	AuthorID int64  `json:"authorID"`
-	Author   Author `json:"author"`
+	Author   Author `gorm:"AuthorID" json:"author"`
 	Image    string `json:"image"`
 }
 
